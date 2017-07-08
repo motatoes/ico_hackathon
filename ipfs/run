@@ -1,0 +1,3 @@
+ipfs daemon&
+export FLASK_APP=ipfs_api.py
+flask run
