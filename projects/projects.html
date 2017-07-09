@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.min.css">
+    <style media="screen">
+      p > span { font-weight: bold; }
+
+      .box {
+          /*background-color: #dfc8ca;*/
+          /*height: 10px;*/
+          display: inline-block;
+      }
+
+      .inputfile-2 + label {
+          color: #666;
+          border: 2px solid currentColor;
+          padding: 4px 12px;
+          display: inline-block;
+      }
+
+      .inputfile + label {
+          max-width: 80%;
+          font-size: 1.00rem;
+          font-weight: 400;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          cursor: pointer;
+          display: inline-block;
+          overflow: hidden;
+          margin-right: 10px;
+          /*padding: 0.625rem 1.25rem;*/
+      }
+
+      .inputfile {
+          width: 0.1px;
+          height: 0.1px;
+          opacity: 0;
+          overflow: hidden;
+          position: absolute;
+          z-index: -1;
+      }
+
+    </style>
+  </head>
+  <body>
+    <section class="hero is-info is-bold">
+      <div class="hero-body">
+        <div class="container">
+          <h1 style="line-height: 50px" class="title">
+          <img style="float: left" src="city.svg">
+            Ether City
+          </h1>
+          <h2 style="margin-left: 78px" class="subtitle">
+            Token-driven City
+          </h2>
+        </div>
+      </div>
+    </section>
+    <section class=main>
+      <div style="height: 50px;"></div>
+      <div class="container">
+      
+      <h1 class="title">Add a proposal</h1>
+      
+      <p>As a member of ethercity, you get to vote on projects and proposals. The most voted projects will be prioritized by the city council for implementation in the city.</p>
+
+      <hr>       
+      <form id="ajax-upload" action="http://localhost:5000/" method="post" enctype="multipart/form-data">
+      <!-- File: <input type="file" name="file"> -->
+
+  <input type="file" name="file" id="file-1" class="inputfile inputfile-2" data-multiple-caption="{count} files selected" multiple="">
+  <label for="file-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17"><path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z"></path></svg> <span>Choose a file…</span></label>
+
+
+
+        <input type="hidden"  class="button is-primary" name="someParam" value="someValue"/>
+        <button type="submit" class="button is-info">Add proposal!</button>
+      </form>
+
+      <hr>
+
+      <h1 class="title">Existing proposals</h1>
+
+      <table id="projectsTable" class="table">
+        <thead>
+          <tr>
+            <th>Project hash</th>
+            <th>Added by (client address)</th>
+            <th>votes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+      </table>
+
+      </div>
+    </section>
+
+    <!-- If you don't want to use metamask you can use a local node and web3.js metamask will inject web3 for you so you don't need to do this: <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js" charset="utf-8"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.5.0/bluebird.min.js" charset="utf-8"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+
+    <!-- if your browser doesn't supports async/await you may want to use https://github.com/yortus/asyncawait -  -->
+    <script type="text/javascript">
+
+      // PLEASE NOTE that the minimum Chrome version to run this code is 55 (async/await)
+
+      // Token contract code used for this example: https://gist.github.com/makevoid/ec7f9d94fdeb78d06cea48a17a117213
+
+      // Any ERC20 Ethereum Standard Token will be compatible with this script.
+
+      var d = document
+      var c = console
+      var g = window // global scope shortcut
+      g.bytecode = null
+      g.abi = null
+      g.projects_bytecode = null
+      g.projects_abi = null
+      g.contractAddress = null//"0xabf9bf1bc09433a669e3243375cdd6a53e5a460b"
+      g.ProjectsContract = null
+
+      var main = async function() {
+        // setup web3
+        if (typeof web3 !== 'undefined') {
+          // connect to metamask (preferred)
+          g.web3 = new Web3(web3.currentProvider)
+        } else {
+          // connect to your local geth or parity node instead
+          g.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"))
+        }
+        g.eth = g.web3.eth
+
+        // setup functions to be called via await (simpler than using callbacks)
+        var getCoinbase = Promise.promisify(g.eth.getCoinbase)
+        g.getBalance    = Promise.promisify(g.eth.getBalance)
+
+        // get your first ethereum address (coinbase address)
+        g.coinbase = await getCoinbase()
+
+        // token contract class
+        var ProjectsContract = g.eth.contract(g.projects_abi)
+        g.ProjectsContract = ProjectsContract
+
+        // token contract instance
+        if (localStorage.ftw_db_address) {
+          g.ProjectsContract = ProjectsContract.at(localStorage.ftw_db_address)
+        }
+
+        handleIPFSform();
+
+
+        g.ProjectsContract.getNumberOfProjects(async function(_, v) {
+          var n = g.web3.toDecimal(v);
+
+          for (var i=0; i<n; i++) {
+
+            const getProject = Promise.promisify(g.ProjectsContract.get);
+
+            const v = await getProject(i);
+            console.log(v);
+            var filehash = v[1];
+
+            $('#projectsTable tr:last').after(`
+              <tr>
+                <td>
+                  <a style="color: #3273dc" class="is-info" href="http://gateway.ipfs.io/ipfs/${filehash}">` + v[1] + `</a>
+                </td>
+                <td>` + v[0] + `</td>
+                <td>` + g.web3.toDecimal(v[2]) + `</td>
+                <td><button class="vote-btn button is-info" data-idx="${i}" onclick='addvote(${i})'>Vote for proposal</button></td>
+              <tr>`); 
+
+
+            // g.ProjectsContract.get(i, function(_, v) {
+            //   console.log(v);
+
+            //   var filehash = v[1];
+
+            //   $('#projectsTable tr:last').after(`
+            //     <tr>
+            //       <td>
+            //         <a href="http://gateway.ipfs.io/ipfs/${filehash}">` + v[1] + `</a>
+            //       </td>
+            //       <td>` + v[0] + `</td>
+            //       <td>` + g.web3.toDecimal(v[2]) + `</td>
+            //       <td><button class="vote-btn" data-idx="${i}" onclick='() => addvote(${i})'>Vote for project</button></td>
+            //     <tr>`);
+
+
+
+
+            // })
+          }
+
+
+        })
+
+      }
+
+
+      window.addEventListener('load', main)
+
+
+      function addvote(i) {
+        console.log(i);
+
+        g.ProjectsContract.addVote(i, function() {});
+      }
+
+      // long (but important) variables are defined here (contract bytecode and contract ABI):
+
+      // bytecode is the contrect compiled in binary format, needed to "deploy" (publish) the contract to the ethereum network
+      // abi is the application binary interface, it tells your web3.js library which are the function names and its arguments to be able to call them.
+
+
+      g.projects_bytecode = "60606040526000600155341561001457600080fd5b5b61059a806100246000396000f30060606040523615610076576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff16806319ba0b631461007b5780634f249f31146100a45780635d814eab146100de578063b6a46b3b14610104578063c73b302e14610161578063f72d0b3b1461018a575b600080fd5b341561008657600080fd5b61008e61026a565b6040518082815260200191505060405180910390f35b34156100af57600080fd5b6100c8600480803560ff16906020019091905050610275565b6040518082815260200191505060405180910390f35b34156100e957600080fd5b610102600480803560ff169060200190919050506102ad565b005b341561010f57600080fd5b61015f600480803590602001908201803590602001908080601f016020809104026020016040519081016040528093929190818152602001838380828437820191505050505050919050506102fc565b005b341561016c57600080fd5b6101746103a5565b6040518082815260200191505060405180910390f35b341561019557600080fd5b6101ae600480803560ff169060200190919050506103ab565b604051808473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001806020018360ff1660ff168152602001828103825284818151815260200191508051906020019080838360005b8381101561022d5780820151818401525b602081019050610211565b50505050905090810190601f16801561025a5780820380516001836020036101000a031916815260200191505b5094505050505060405180910390f35b600060015490505b90565b6000806000808460ff16815260200190815260200160002090508060020160009054906101000a900460ff1660ff1691505b50919050565b60008060008360ff168152602001908152602001600020905060018160020160009054906101000a900460ff16018160020160006101000a81548160ff021916908360ff1602179055505b5050565b600080600060015481526020019081526020016000209050338160000160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055508181600101908051906020019061036f9291906104b5565b5060008160020160006101000a81548160ff021916908360ff1602179055506001600081548092919060010191905055505b5050565b60015481565b60006103b5610535565b6000806000808660ff16815260200190815260200160002090508060000160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16816001018260020160009054906101000a900460ff16818054600181600116156101000203166002900480601f01602080910402602001604051908101604052809291908181526020018280546001816001161561010002031660029004801561049f5780601f106104745761010080835404028352916020019161049f565b820191906000526020600020905b81548152906001019060200180831161048257829003601f168201915b505050505091509350935093505b509193909250565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f106104f657805160ff1916838001178555610524565b82800160010185558215610524579182015b82811115610523578251825591602001919060010190610508565b5b5090506105319190610549565b5090565b602060405190810160405280600081525090565b61056b91905b8082111561056757600081600090555060010161054f565b5090565b905600a165627a7a72305820d200a8f72e1015f5b39cbcb7e78eae8944e80f8cb426ad51ed4c3c3170dff5930029";
+
+
+      g.projects_abi = [{"constant":true,"inputs":[],"name":"getNumberOfProjects","outputs":[{"name":"n","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"i","type":"uint8"}],"name":"getNumberOfVotes","outputs":[{"name":"n","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"i","type":"uint8"}],"name":"addVote","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"filehash","type":"string"}],"name":"create","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"projectsCount","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"i","type":"uint8"}],"name":"get","outputs":[{"name":"clientAddress","type":"address"},{"name":"filehash","type":"string"},{"name":"nvts","type":"uint8"}],"payable":false,"type":"function"}];
+
+
+
+      // contract was compiled via:  https://ethereum.github.io/browser-solidity/
+
+      // feel free to ask questions to @makevoid during Saturday about the JS code above and feel free to change it completely to however you'll like :)
+
+      function handleIPFSform() {
+
+              document.getElementById('ajax-upload').addEventListener("submit", function(e){
+                e.preventDefault()
+
+                // if (!e.isPreventDefaulted()) {
+                //   console.log('Thee event was not prevented');
+                //   return;
+                // }
+                // else {
+                //   console.log('prevented');
+                //   return;
+                // }
+
+                var form = e.target
+                var data = new FormData(form)
+                
+                var request = new createCORSRequest('POST', "http://localhost:5000/")
+                if (!request) {
+                  throw new Error('CORS not supported');
+                }
+
+                // Response handlers.
+                request.onload = function() {
+                  var text = request.responseText;
+                    console.log('Response from CORS request to:'  + text);
+                    var resjson = JSON.parse(text)
+                    console.log(resjson['hash'])
+
+                    g.ProjectsContract.create(resjson['hash'], function(){});
+                };
+
+                request.onerror = function(err) {
+                  console.log(err);
+                  alert('Woops, there was an error making the request.');
+                };
+
+                request.open(form.method, form.action)
+                request.send(data);
+                
+
+
+
+                // request.onreadystatechange = function(){
+                //   console.log(request.responseText);
+                // }
+                
+                // request.open(form.method, form.action)
+                // request.send(data)
+              })
+
+
+      }
+
+      function createCORSRequest(method, url) {
+        var xhr = new XMLHttpRequest();
+
+        if ("withCredentials" in xhr) {
+
+          // Check if the XMLHttpRequest object has a "withCredentials" property.
+          // "withCredentials" only exists on XMLHTTPRequest2 objects.
+          xhr.open(method, url, true);
+
+        } else if (typeof XDomainRequest != "undefined") {
+
+          // Otherwise, check if XDomainRequest.
+          // XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+          xhr = new XDomainRequest();
+          xhr.open(method, url);
+
+        } else {
+
+          // Otherwise, CORS is not supported by the browser.
+          xhr = null;
+
+        }
+        return xhr;
+      }      
+    </script>
+  </body>
+</html>
