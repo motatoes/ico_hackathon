@@ -37,7 +37,7 @@ def upload():
         ipfs_out, err = process.communicate()
 
         ipfs_hash = ipfs_out.split()[1]
-        return json.dumps({'file': 'files/' + filename, 'hash': ipfs_hash})
+        return json.dumps({'file': 'files/' + filename, 'hash': ipfs_hash, 'success': True})
 
 
     return json.dumps({'error': 'no_file_uploaded'})
