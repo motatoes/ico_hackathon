@@ -1,5 +1,5 @@
 # ico_hackathon
-City Coin project entry. A token for building cities. Entry for team `eht city` in the applied blockchain fintech week hackathon 7th of July 2017.
+**Grand prize winner**. City Coin project entry. A token for building cities. Entry for team `City Coin` in the applied blockchain fintech week hackathon 7th of July 2017.
 
 ![screeshot](docs/screenshot2.png)
 
