@@ -50,10 +50,10 @@
         <div class="container">
           <h1 style="line-height: 50px" class="title">
           <img style="float: left" src="city.svg">
-            Ether City
+            City Coin
           </h1>
           <h2 style="margin-left: 78px" class="subtitle">
-            Token-driven City
+            A token-driven City
           </h2>
         </div>
       </div>
@@ -62,7 +62,7 @@
       <div style="height: 50px;"></div>
       <div class="container">
       
-      <h1 class="title">Add a proposal</h1>
+      <h1 class="title">Add a city proposal</h1>
       
       <p>As a member of ethercity, you get to vote on projects and proposals. The most voted projects will be prioritized by the city council for implementation in the city.</p>
 
@@ -86,6 +86,7 @@
       <table id="projectsTable" class="table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Project hash</th>
             <th>Added by (client address)</th>
             <th>votes</th>
@@ -168,6 +169,7 @@
 
             $('#projectsTable tr:last').after(`
               <tr>
+                <td>${i+1}</td>
                 <td>
                   <a style="color: #3273dc" class="is-info" href="http://gateway.ipfs.io/ipfs/${filehash}">` + v[1] + `</a>
                 </td>
