@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-# this will let you access your index.html page via http://localhost:3000
-
-python -m SimpleHTTPServer 3333
